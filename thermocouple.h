@@ -28,12 +28,12 @@ extern "C" {
 /**
  * Returns temperature as a function of the ambient temperature and measured thermocouple voltage
  **/
-long thermocoupleConvertWithCJCompensation(unsigned long microvoltsMeasured, unsigned long ambient);
+long thermocoupleConvertWithCJCompensation(signed long microvoltsMeasured, signed long ambient);
 
 /**
  * Returns temperature equivalent the voltage provided in microvolts
  */
-long thermocoupleMvToC(unsigned long microvolts);
+long thermocoupleMvToC(signed long microvolts);
 
 #ifdef __cplusplus
 }

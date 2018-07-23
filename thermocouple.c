@@ -41,11 +41,36 @@
  *    66 * 2 = 132 bytes
  */
 #define TEMP_TABLE_SCALE 1000
-static const unsigned int temp_table[]
+static const signed int temp_table[]
     #ifdef KTHERM_WITH_PROGMEM
     PROGMEM
     #endif
     = {
+	-250,
+	-240,
+	-230,
+	-220,
+	-210,
+	-200,
+	-190,
+	-180,
+	-170,
+	-160,
+	-150,
+	-140,
+	-130,
+	-120,
+	-110,
+	-100,
+	-90,
+	-80,
+	-70,
+	-60,
+	-50,
+	-40,
+	-30,
+	-20,
+	-10,
     0,
     10,
     20,
@@ -116,12 +141,37 @@ static const unsigned int temp_table[]
 
 #define TEMP_TABLE_SIZE (sizeof(temp_table) / sizeof(temp_table[0]))
 
-static const unsigned int volt_table[]
+static const signed int volt_table[]
     #ifdef KTHERM_WITH_PROGMEM
     PROGMEM
     #endif
     = {
-    0,
+	-6404,
+	-6344,
+	-6262,
+	-6158,
+	-6035,
+	-5891,
+	-5730,
+	-5550,
+	-5354,
+	-5141,
+	-4913,
+	-4669,
+	-4411,
+	-4138,
+	-3852,
+	-3554,
+	-3243,
+	-2920,
+	-2587,
+	-2243,
+	-1889,
+	-1527,
+	-1156,
+	-778,
+    -392,
+	0,
     397,
     798,
     1203,
@@ -192,23 +242,23 @@ static const unsigned int volt_table[]
 #define VOLTAGE_TABLE_SIZE (sizeof(volt_table) / sizeof(volt_table[0]))
 #define POINTS_COUNT (VOLTAGE_TABLE_SIZE - 1)
 
-static inline unsigned long getTableVal(const unsigned int *t,
+static inline signed long getTableVal(const signed int *t,
                                         unsigned char i)
 {
     #ifdef KTHERM_WITH_PROGMEM
     return (unsigned long)pgm_read_word_near(t + i);
     #else
-    return (unsigned long)t[i];
+    return (signed long)t[i];
     #endif
 }
 
-static inline unsigned long interpolate(unsigned long val,
-                                        unsigned long rangeStart,
-                                        unsigned long rangeEnd,
-                                        unsigned long valStart,
-                                        unsigned long valEnd)
+static inline signed long interpolate(signed long val,
+                                        signed long rangeStart,
+                                        signed long rangeEnd,
+                                        signed long valStart,
+                                        signed long valEnd)
 {
-    unsigned long valDiff = valEnd - valStart;
+    signed long valDiff = valEnd - valStart;
 
     if (valDiff == 0)
         return 0;
@@ -216,8 +266,8 @@ static inline unsigned long interpolate(unsigned long val,
     return rangeStart + (rangeEnd - rangeStart) * (val - valStart) / valDiff;
 }
 
-static inline unsigned long interpolateVoltage(unsigned long temp,
-                                               unsigned char i)
+static inline signed long interpolateVoltage(signed long temp,
+                                               signed char i)
 {
     return interpolate(temp,
                        getTableVal(volt_table, i - 1),
@@ -226,8 +276,8 @@ static inline unsigned long interpolateVoltage(unsigned long temp,
                        getTableVal(temp_table, i) * TEMP_TABLE_SCALE);
 }
 
-static inline unsigned long interpolateTemperature(unsigned long microvolts,
-                                                   unsigned char i)
+static inline signed long interpolateTemperature(signed long microvolts,
+                                                   signed char i)
 {
     return interpolate(microvolts,
                        getTableVal(temp_table, i - 1) * TEMP_TABLE_SCALE,
@@ -236,9 +286,9 @@ static inline unsigned long interpolateTemperature(unsigned long microvolts,
                        getTableVal(volt_table, i));
 }
 
-static inline unsigned char binarySearch(const unsigned int *t,
-                                         unsigned long val,
-                                         unsigned long scale)
+static inline unsigned char binarySearch(const signed int *t,
+                                         signed long val,
+                                         signed long scale)
 {
     unsigned char first;
     unsigned char middle;
@@ -273,9 +323,9 @@ static inline unsigned char binarySearch(const unsigned int *t,
     return last + 1;
 }
 
-static inline unsigned char linearSearch(const unsigned int *t,
-                                         unsigned long val,
-                                         unsigned long scale)
+static inline unsigned char linearSearch(const signed int *t,
+                                         signed long val,
+                                         signed long scale)
 {
     unsigned char i;
 
@@ -293,7 +343,7 @@ static inline unsigned char linearSearch(const unsigned int *t,
  * Returns the index of the first point whose temperature
  * value is greater than argument
  **/
-static inline unsigned char searchTemp(unsigned long temp)
+static inline unsigned char searchTemp(signed long temp)
 {
     #ifdef KTHERM_WITH_BINARY_SEARCH
     return binarySearch(temp_table, temp, TEMP_TABLE_SCALE);
@@ -306,7 +356,7 @@ static inline unsigned char searchTemp(unsigned long temp)
  * Returns the index of the first point whose microvolts
  * value is greater than argument
  **/
-static inline unsigned char searchMicrovolts(unsigned long microvolts)
+static inline unsigned char searchMicrovolts(signed long microvolts)
 {
     #ifdef KTHERM_WITH_BINARY_SEARCH
     return binarySearch(volt_table, microvolts, 1);
@@ -320,12 +370,12 @@ static inline unsigned char searchMicrovolts(unsigned long microvolts)
  * and measured thermocouple voltage.
  * Currently only positive ambient temperature is supported
  **/
-long thermocoupleConvertWithCJCompensation(unsigned long microvoltsMeasured,
-                                           unsigned long ambient)
+long thermocoupleConvertWithCJCompensation(signed long microvoltsMeasured,
+                                           signed long ambient)
 {
     // Convert ambient temp to microvolts
     // and add them to the thermocouple measured microvolts 
-    unsigned long microvolts = 
+    signed long microvolts = 
         microvoltsMeasured + interpolateVoltage(ambient, searchTemp(ambient));
 
     // look up microvolts in The Table and interpolate
@@ -335,7 +385,7 @@ long thermocoupleConvertWithCJCompensation(unsigned long microvoltsMeasured,
 /**
  * Returns temperature, equivalent to the voltage provided in microvolts
  */
-long thermocoupleMvToC(unsigned long microvolts)
+long thermocoupleMvToC(signed long microvolts)
 {
     return interpolateTemperature(microvolts, searchMicrovolts(microvolts));
 }
